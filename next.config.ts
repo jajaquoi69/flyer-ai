@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Turbopack (default in Next 16) — no extra config needed for WebLLM
+  turbopack: {},
 };
 
 export default nextConfig;
