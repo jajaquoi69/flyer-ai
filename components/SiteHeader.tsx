@@ -8,6 +8,7 @@ const navLinks = [
   { href: "/", label: "Accueil" },
   { href: "/pricing", label: "Tarifs" },
   { href: "/create", label: "Créer" },
+  { href: "/psy", label: "Mon Psy" },
 ];
 
 type HeaderVariant = "marketing" | "app";
