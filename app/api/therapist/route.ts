@@ -48,9 +48,29 @@ function buildSystem(userProfile: string, currentMood: string): string {
   return lines.join("\n");
 }
 
+function makeClient() {
+  if (process.env.GROQ_API_KEY) {
+    return {
+      client: new OpenAI({
+        apiKey: process.env.GROQ_API_KEY,
+        baseURL: "https://api.groq.com/openai/v1",
+      }),
+      model: "llama-3.3-70b-versatile",
+    };
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return { client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), model: "gpt-4o" };
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
-  if (!process.env.OPENAI_API_KEY) {
-    return Response.json({ error: "Missing OPENAI_API_KEY" }, { status: 500 });
+  const api = makeClient();
+  if (!api) {
+    return Response.json(
+      { error: "Aucune clé API configurée. Ajoute GROQ_API_KEY (gratuit) ou OPENAI_API_KEY dans .env.local" },
+      { status: 500 }
+    );
   }
 
   let body: Payload;
@@ -61,7 +81,7 @@ export async function POST(req: Request) {
   }
 
   const { messages = [], userProfile = "", currentMood = "" } = body;
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const { client, model } = api;
   const system = buildSystem(userProfile, currentMood);
   const enc = new TextEncoder();
 
@@ -69,7 +89,7 @@ export async function POST(req: Request) {
     async start(controller) {
       try {
         const completion = await client.chat.completions.create({
-          model: "gpt-4o",
+          model,
           messages: [{ role: "system", content: system }, ...messages],
           stream: true,
           max_tokens: 450,
